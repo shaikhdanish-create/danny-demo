@@ -1,7 +1,7 @@
 # danny-demo
 this is my first repository
 
-# My Python Project 🐍
+# My Python first code 🐍
 
 Hi! This is a simple Python project I made while learning programming.
 
