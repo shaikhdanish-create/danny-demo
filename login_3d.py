@@ -1,129 +1,148 @@
+"""Modern 3D-style login page in Python.
+
+This version uses customtkinter for a more modern UI (MUI-like look)
+with layered cards and glow accents.
+"""
+
 import tkinter as tk
 from tkinter import messagebox
 
+try:
+    import customtkinter as ctk
+except ImportError as exc:  # noqa: F841
+    raise SystemExit(
+        "customtkinter is required. Install it with: pip install customtkinter"
+    )
 
-class Login3DApp:
-    def __init__(self, root: tk.Tk) -> None:
-        self.root = root
-        self.root.title("3D Login Page")
-        self.root.geometry("900x600")
-        self.root.resizable(False, False)
 
-        self.canvas = tk.Canvas(root, width=900, height=600, highlightthickness=0)
-        self.canvas.pack(fill="both", expand=True)
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
 
-        self._draw_background()
-        self._draw_login_card()
 
-    def _draw_background(self) -> None:
-        # Layered gradient-like backdrop using bands.
-        colors = [
-            "#070b1a", "#0a1024", "#0d1531", "#121b40", "#172252", "#1e2b66", "#27357c"
+class ModernLogin3D(ctk.CTk):
+    def __init__(self) -> None:
+        super().__init__()
+        self.title("MUI 3D Login")
+        self.geometry("980x640")
+        self.resizable(False, False)
+
+        self._build_background()
+        self._build_card()
+
+    def _build_background(self) -> None:
+        self.bg = tk.Canvas(self, width=980, height=640, highlightthickness=0, bg="#090f1f")
+        self.bg.place(x=0, y=0, relwidth=1, relheight=1)
+
+        # Gradient-like bands
+        shades = ["#070b17", "#0d1326", "#111b33", "#162447", "#1a2c57", "#21386d"]
+        band_h = 640 // len(shades)
+        for i, color in enumerate(shades):
+            y0 = i * band_h
+            self.bg.create_rectangle(0, y0, 980, y0 + band_h + 3, fill=color, outline="")
+
+        # Soft blobs for depth
+        blobs = [
+            (130, 110, 170, "#233667"),
+            (860, 120, 130, "#2c4686"),
+            (840, 520, 190, "#1b2c5c"),
+            (140, 520, 130, "#324f94"),
         ]
-        band_height = 600 // len(colors)
-        for i, color in enumerate(colors):
-            y0 = i * band_height
-            y1 = y0 + band_height + 2
-            self.canvas.create_rectangle(0, y0, 900, y1, fill=color, outline="")
+        for x, y, r, color in blobs:
+            self.bg.create_oval(x - r, y - r, x + r, y + r, fill=color, outline="")
 
-        # Floating decorative circles for depth.
-        for x, y, r, color in [
-            (140, 120, 120, "#24315f"),
-            (760, 130, 90, "#2b3f7f"),
-            (760, 470, 140, "#1f2d58"),
-            (140, 470, 95, "#314b8f"),
-        ]:
-            self.canvas.create_oval(x - r, y - r, x + r, y + r, fill=color, outline="")
+    def _build_card(self) -> None:
+        # Shadow layers
+        self.shadow_1 = ctk.CTkFrame(self, width=430, height=420, fg_color="#0a0f23", corner_radius=28)
+        self.shadow_1.place(x=286, y=126)
 
-    def _draw_login_card(self) -> None:
-        # Faux 3D shadow layers.
-        self.canvas.create_rectangle(248, 138, 652, 462, fill="#080d20", outline="", width=0)
-        self.canvas.create_rectangle(242, 132, 646, 456, fill="#111935", outline="", width=0)
+        self.shadow_2 = ctk.CTkFrame(self, width=430, height=420, fg_color="#111a3a", corner_radius=26)
+        self.shadow_2.place(x=278, y=118)
 
-        # Foreground card.
-        self.canvas.create_rectangle(235, 125, 640, 450, fill="#1a2550", outline="#4f79ff", width=2)
-
-        self.canvas.create_text(
-            438,
-            175,
-            text="WELCOME BACK",
-            fill="#dce7ff",
-            font=("Segoe UI", 24, "bold"),
+        # Main panel
+        self.card = ctk.CTkFrame(
+            self,
+            width=430,
+            height=420,
+            fg_color="#1b2958",
+            corner_radius=24,
+            border_width=2,
+            border_color="#4c78ff",
         )
-        self.canvas.create_text(
-            438,
-            210,
-            text="Login to continue",
-            fill="#9bb3ff",
-            font=("Segoe UI", 12),
+        self.card.place(x=270, y=110)
+
+        ctk.CTkLabel(
+            self.card,
+            text="Welcome Back",
+            font=ctk.CTkFont(size=30, weight="bold"),
+            text_color="#e4edff",
+        ).place(relx=0.5, y=56, anchor="center")
+
+        ctk.CTkLabel(
+            self.card,
+            text="Sign in to continue",
+            font=ctk.CTkFont(size=14),
+            text_color="#9fb8ff",
+        ).place(relx=0.5, y=90, anchor="center")
+
+        self.username = ctk.StringVar()
+        self.password = ctk.StringVar()
+
+        ctk.CTkLabel(self.card, text="Username", text_color="#cfe0ff", font=ctk.CTkFont(size=13)).place(x=70, y=140)
+        self.user_entry = ctk.CTkEntry(
+            self.card,
+            width=290,
+            height=42,
+            textvariable=self.username,
+            corner_radius=12,
+            fg_color="#283a73",
+            border_color="#7ea0ff",
+            text_color="#f1f6ff",
+            placeholder_text="Enter username",
         )
+        self.user_entry.place(x=70, y=168)
 
-        self.username_var = tk.StringVar()
-        self.password_var = tk.StringVar()
+        ctk.CTkLabel(self.card, text="Password", text_color="#cfe0ff", font=ctk.CTkFont(size=13)).place(x=70, y=228)
+        self.pass_entry = ctk.CTkEntry(
+            self.card,
+            width=290,
+            height=42,
+            textvariable=self.password,
+            show="•",
+            corner_radius=12,
+            fg_color="#283a73",
+            border_color="#7ea0ff",
+            text_color="#f1f6ff",
+            placeholder_text="Enter password",
+        )
+        self.pass_entry.place(x=70, y=256)
 
-        # Entry frame with subtle depth effect.
-        self._draw_labeled_entry("Username", self.username_var, 270)
-        self._draw_labeled_entry("Password", self.password_var, 340, show="•")
-
-        login_button = tk.Button(
-            self.root,
+        self.login_btn = ctk.CTkButton(
+            self.card,
             text="LOGIN",
-            command=self._login,
-            font=("Segoe UI", 12, "bold"),
-            fg="#ffffff",
-            bg="#3d6cff",
-            activebackground="#5b84ff",
-            activeforeground="#ffffff",
-            bd=0,
-            cursor="hand2",
-            padx=28,
-            pady=10,
+            width=290,
+            height=46,
+            corner_radius=14,
+            font=ctk.CTkFont(size=14, weight="bold"),
+            fg_color="#3f6fff",
+            hover_color="#5c86ff",
+            command=self._on_login,
         )
-        self.canvas.create_window(438, 400, window=login_button)
+        self.login_btn.place(x=70, y=330)
 
-    def _draw_labeled_entry(
-        self,
-        label: str,
-        variable: tk.StringVar,
-        y: int,
-        show: str | None = None,
-    ) -> None:
-        self.canvas.create_text(305, y - 25, text=label, fill="#c4d3ff", font=("Segoe UI", 11), anchor="w")
+    def _on_login(self) -> None:
+        user = self.username.get().strip()
+        pwd = self.password.get().strip()
 
-        # Lower layer (shadow)
-        self.canvas.create_rectangle(302, y + 6, 574, y + 46, fill="#0d1532", outline="")
-        # Upper layer (input background)
-        self.canvas.create_rectangle(298, y + 2, 570, y + 42, fill="#2a3970", outline="#7898ff", width=1)
-
-        entry = tk.Entry(
-            self.root,
-            textvariable=variable,
-            show=show,
-            font=("Segoe UI", 12),
-            fg="#e9f0ff",
-            bg="#2a3970",
-            insertbackground="#ffffff",
-            relief="flat",
-            bd=0,
-            width=24,
-        )
-        self.canvas.create_window(434, y + 22, window=entry)
-
-    def _login(self) -> None:
-        username = self.username_var.get().strip()
-        password = self.password_var.get().strip()
-
-        if not username or not password:
-            messagebox.showwarning("Missing Data", "Please enter both username and password.")
+        if not user or not pwd:
+            messagebox.showwarning("Missing fields", "Please fill in both username and password.")
             return
 
-        messagebox.showinfo("Login", f"Welcome, {username}! (Demo login)")
+        messagebox.showinfo("Login success", f"Welcome, {user}! (Demo)")
 
 
 def main() -> None:
-    root = tk.Tk()
-    Login3DApp(root)
-    root.mainloop()
+    app = ModernLogin3D()
+    app.mainloop()
 
 
 if __name__ == "__main__":
